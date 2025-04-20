@@ -24,15 +24,15 @@
 // Libraries
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
-#include <AP_BattMonitor/AP_BattMonitor.h>          // Battery monitor library
-#include <AP_Camera/AP_Camera.h>                    // Camera triggering
-#include <AP_Mount/AP_Mount.h>                      // Camera/Antenna mount
+#include <AP_BattMonitor/AP_BattMonitor.h> // Battery monitor library
+#include <AP_Camera/AP_Camera.h>           // Camera triggering
+#include <AP_Mount/AP_Mount.h>             // Camera/Antenna mount
 #include <AP_Param/AP_Param.h>
-#include <AP_RangeFinder/AP_RangeFinder.h>          // Range finder library
-#include <AP_RCMapper/AP_RCMapper.h>                // RC input mapping library
-#include <AP_RPM/AP_RPM.h>                          // RPM input library
-#include <AP_Scheduler/AP_Scheduler.h>              // main loop scheduler
-#include <AP_Vehicle/AP_Vehicle.h>                  // needed for AHRS build
+#include <AP_RangeFinder/AP_RangeFinder.h> // Range finder library
+#include <AP_RCMapper/AP_RCMapper.h>       // RC input mapping library
+#include <AP_RPM/AP_RPM.h>                 // RPM input library
+#include <AP_Scheduler/AP_Scheduler.h>     // main loop scheduler
+#include <AP_Vehicle/AP_Vehicle.h>         // needed for AHRS build
 #include <AP_WheelEncoder/AP_WheelEncoder.h>
 #include <AP_WheelEncoder/AP_WheelRateControl.h>
 #include <AP_Logger/AP_Logger.h>
@@ -70,11 +70,12 @@
 #if AC_PRECLAND_ENABLED
 #include <AC_PrecLand/AC_PrecLand.h>
 #endif
-#include "RC_Channel_Rover.h"                  // RC Channel Library
+#include "RC_Channel_Rover.h" // RC Channel Library
 
 #include "mode.h"
 
-class Rover : public AP_Vehicle {
+class Rover : public AP_Vehicle
+{
 public:
     friend class GCS_MAVLINK_Rover;
     friend class Parameters;
@@ -115,7 +116,6 @@ public:
     Rover(void);
 
 private:
-
     // must be the first AP_Param variable declared to ensure its
     // constructor runs before the constructors of the other AP_Param
     // variables
@@ -164,7 +164,7 @@ private:
     AC_PrecLand precland;
 #endif
     // GCS handling
-    GCS_Rover _gcs;  // avoid using this; use gcs()
+    GCS_Rover _gcs; // avoid using this; use gcs()
     GCS_Rover &gcs() { return _gcs; }
 
     // RC Channels:
@@ -195,11 +195,12 @@ private:
     uint8_t oldSwitchPosition;
 
     // structure for holding failsafe state
-    struct {
-        uint8_t bits;               // bit flags of failsafes that have started (but not necessarily triggered an action)
-        uint32_t start_time;        // start time of the earliest failsafe
-        uint8_t triggered;          // bit flags of failsafes that have triggered an action
-        uint32_t last_valid_rc_ms;  // system time of most recent RC input from pilot
+    struct
+    {
+        uint8_t bits;              // bit flags of failsafes that have started (but not necessarily triggered an action)
+        uint32_t start_time;       // start time of the earliest failsafe
+        uint8_t triggered;         // bit flags of failsafes that have triggered an action
+        uint32_t last_valid_rc_ms; // system time of most recent RC input from pilot
         bool ekf;
     } failsafe;
 
@@ -217,7 +218,7 @@ private:
 
     // Battery Sensors
     AP_BattMonitor battery{MASK_LOG_CURRENT,
-                           FUNCTOR_BIND_MEMBER(&Rover::handle_battery_failsafe, void, const char*, const int8_t),
+                           FUNCTOR_BIND_MEMBER(&Rover::handle_battery_failsafe, void, const char *, const int8_t),
                            _failsafe_priorities};
 
     // flyforward timer
@@ -260,9 +261,11 @@ private:
 #if MODE_DOCK_ENABLED
     ModeDock mode_dock;
 #endif
+    ModeNodeRed mode_node_red;
 
     // cruise throttle and speed learning
-    typedef struct {
+    typedef struct
+    {
         LowPassFilterFloat speed_filt{2.0f};
         LowPassFilterFloat throttle_filt{2.0f};
         uint32_t learn_start_ms;
@@ -272,13 +275,13 @@ private:
 
     // Rover.cpp
 #if AP_SCRIPTING_ENABLED || AP_EXTERNAL_CONTROL_ENABLED
-    bool set_target_location(const Location& target_loc) override;
+    bool set_target_location(const Location &target_loc) override;
 #endif
 
 #if AP_SCRIPTING_ENABLED
-    bool set_target_velocity_NED(const Vector3f& vel_ned) override;
+    bool set_target_velocity_NED(const Vector3f &vel_ned) override;
     bool set_steering_and_throttle(float steering, float throttle) override;
-    bool get_steering_and_throttle(float& steering, float& throttle) override;
+    bool get_steering_and_throttle(float &steering, float &throttle) override;
     // set desired turn rate (degrees/sec) and speed (m/s). Used for scripting
     bool set_desired_turn_rate_and_speed(float turn_rate, float speed) override;
     bool set_desired_speed(float speed) override;
@@ -300,7 +303,7 @@ private:
 
     // commands.cpp
     bool set_home_to_current_location(bool lock) override WARN_IF_UNUSED;
-    bool set_home(const Location& loc, bool lock) override WARN_IF_UNUSED;
+    bool set_home(const Location &loc, bool lock) override WARN_IF_UNUSED;
     void update_home();
 
     // crash_check.cpp
@@ -320,8 +323,8 @@ private:
     void failsafe_ekf_off_event(void);
 
     // failsafe.cpp
-    void failsafe_trigger(uint8_t failsafe_type, const char* type_str, bool on);
-    void handle_battery_failsafe(const char* type_str, const int8_t action);
+    void failsafe_trigger(uint8_t failsafe_type, const char *type_str, bool on);
+    void handle_battery_failsafe(const char *type_str, const int8_t action);
 #if AP_ROVER_ADVANCED_FAILSAFE_ENABLED
     void afs_fs_check(void);
 #endif
@@ -336,7 +339,8 @@ private:
 #if HAL_LOGGING_ENABLED
     // methods for AP_Vehicle:
     const AP_Int32 &get_log_bitmask() override { return g.log_bitmask; }
-    const struct LogStructure *get_log_structures() const override {
+    const struct LogStructure *get_log_structures() const override
+    {
         return log_structure;
     }
     uint8_t get_num_log_structures() const override;
@@ -344,7 +348,7 @@ private:
     // Log.cpp
     void Log_Write_Attitude();
     void Log_Write_Depth();
-    void Log_Write_GuidedTarget(uint8_t target_type, const Vector3f& pos_target, const Vector3f& vel_target);
+    void Log_Write_GuidedTarget(uint8_t target_type, const Vector3f &pos_target, const Vector3f &vel_target);
     void Log_Write_Nav_Tuning();
     void Log_Write_Sail();
     void Log_Write_Steering();
@@ -395,7 +399,8 @@ private:
     bool set_mode(const uint8_t new_mode, ModeReason reason) override;
     bool set_mode(Mode::Number new_mode, ModeReason reason);
     uint8_t get_mode() const override { return (uint8_t)control_mode->mode_number(); }
-    bool current_mode_requires_mission() const override {
+    bool current_mode_requires_mission() const override
+    {
         return control_mode == &mode_auto;
     }
 
@@ -410,31 +415,32 @@ private:
     bool get_wp_bearing_deg(float &bearing) const override;
     bool get_wp_crosstrack_error_m(float &xtrack_error) const override;
 
-    enum class FailsafeAction: int8_t {
-        None          = 0,
-        RTL           = 1,
-        Hold          = 2,
-        SmartRTL      = 3,
+    enum class FailsafeAction : int8_t
+    {
+        None = 0,
+        RTL = 1,
+        Hold = 2,
+        SmartRTL = 3,
         SmartRTL_Hold = 4,
-        Terminate     = 5
+        Terminate = 5
     };
 
-    enum class Failsafe_Options : uint32_t {
-        Failsafe_Option_Active_In_Hold = (1<<0)
+    enum class Failsafe_Options : uint32_t
+    {
+        Failsafe_Option_Active_In_Hold = (1 << 0)
     };
 
     static constexpr int8_t _failsafe_priorities[] = {
-                                                       (int8_t)FailsafeAction::Terminate,
-                                                       (int8_t)FailsafeAction::Hold,
-                                                       (int8_t)FailsafeAction::RTL,
-                                                       (int8_t)FailsafeAction::SmartRTL_Hold,
-                                                       (int8_t)FailsafeAction::SmartRTL,
-                                                       (int8_t)FailsafeAction::None,
-                                                       -1 // the priority list must end with a sentinel of -1
-                                                      };
+        (int8_t)FailsafeAction::Terminate,
+        (int8_t)FailsafeAction::Hold,
+        (int8_t)FailsafeAction::RTL,
+        (int8_t)FailsafeAction::SmartRTL_Hold,
+        (int8_t)FailsafeAction::SmartRTL,
+        (int8_t)FailsafeAction::None,
+        -1 // the priority list must end with a sentinel of -1
+    };
     static_assert(_failsafe_priorities[ARRAY_SIZE(_failsafe_priorities) - 1] == -1,
                   "_failsafe_priorities is missing the sentinel");
-
 
 public:
     void failsafe_check();
@@ -446,7 +452,7 @@ public:
 
     // frame type
     uint8_t get_frame_type() const { return g2.frame_type.get(); }
-    AP_WheelRateControl& get_wheel_rate_control() { return g2.wheel_rate_control; }
+    AP_WheelRateControl &get_wheel_rate_control() { return g2.wheel_rate_control; }
 
     // Simple mode
     float simple_sin_yaw;
@@ -454,5 +460,5 @@ public:
 
 extern Rover rover;
 
-using AP_HAL::millis;
 using AP_HAL::micros;
+using AP_HAL::millis;

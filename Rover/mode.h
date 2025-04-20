@@ -8,26 +8,27 @@ class ModeRTL;
 class Mode
 {
 public:
-
     // Auto Pilot modes
     // ----------------
-    enum class Number : uint8_t {
-        MANUAL       = 0,
-        ACRO         = 1,
-        STEERING     = 3,
-        HOLD         = 4,
-        LOITER       = 5,
-        FOLLOW       = 6,
-        SIMPLE       = 7,
+    enum class Number : uint8_t
+    {
+        MANUAL = 0,
+        ACRO = 1,
+        STEERING = 3,
+        HOLD = 4,
+        LOITER = 5,
+        FOLLOW = 6,
+        SIMPLE = 7,
 #if MODE_DOCK_ENABLED
-        DOCK         = 8,
+        DOCK = 8,
 #endif
-        CIRCLE       = 9,
-        AUTO         = 10,
-        RTL          = 11,
-        SMART_RTL    = 12,
-        GUIDED       = 15,
+        CIRCLE = 9,
+        AUTO = 10,
+        RTL = 11,
+        SMART_RTL = 12,
+        GUIDED = 15,
         INITIALISING = 16,
+        NODE_RED = 17,
         // Mode number 30 reserved for "offboard" for external/lua control.
     };
 
@@ -106,7 +107,7 @@ public:
 
     // return desired location (used in Guided, Auto, RTL, etc)
     // return true on success, false if there is no valid destination
-    virtual bool get_desired_location(Location& destination) const WARN_IF_UNUSED { return false; }
+    virtual bool get_desired_location(Location &destination) const WARN_IF_UNUSED { return false; }
 
     // set desired location (used in Guided, Auto)
     // set next_destination (if known).  If not provided vehicle stops at destination
@@ -126,13 +127,18 @@ public:
     void set_reversed(bool value);
 
     // init reversed flag for autopilot mode
-    virtual void init_reversed_flag() { if (is_autopilot_mode()) { set_reversed(false); } }
+    virtual void init_reversed_flag()
+    {
+        if (is_autopilot_mode())
+        {
+            set_reversed(false);
+        }
+    }
 
     // handle tacking request (from auxiliary switch) in sailboats
     virtual void handle_tack_request();
 
 protected:
-
     // subclasses override this to perform checks before entering the mode
     virtual bool _enter() { return true; }
 
@@ -192,7 +198,6 @@ protected:
     float calc_speed_nudge(float target_speed, bool reversed);
 
 protected:
-
     // decode pilot steering and throttle inputs and return in steer_out and throttle_out arguments
     // steering_out is in the range -4500 ~ +4500 with positive numbers meaning rotate clockwise
     // throttle_out is in the range -100 ~ +100
@@ -213,15 +218,13 @@ protected:
 
     // private members for waypoint navigation
     float _distance_to_destination; // distance from vehicle to final destination in meters
-    bool _reached_destination;  // true once the vehicle has reached the destination
-    float _desired_yaw_cd;      // desired yaw in centi-degrees.  used in Auto, Guided and Loiter
+    bool _reached_destination;      // true once the vehicle has reached the destination
+    float _desired_yaw_cd;          // desired yaw in centi-degrees.  used in Auto, Guided and Loiter
 };
-
 
 class ModeAcro : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::ACRO; }
     const char *name4() const override { return "ACRO"; }
 
@@ -239,11 +242,9 @@ public:
     void handle_tack_request() override;
 };
 
-
 class ModeAuto : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::AUTO; }
     const char *name4() const override { return "AUTO"; }
 
@@ -267,7 +268,7 @@ public:
     float get_distance_to_destination() const override;
 
     // get or set desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
     bool set_desired_location(const Location &destination, Location next_destination = Location()) override WARN_IF_UNUSED;
     bool reached_destination() const override;
 
@@ -281,98 +282,101 @@ public:
     bool nav_script_time(uint16_t &id, uint8_t &cmd, float &arg1, float &arg2, int16_t &arg3, int16_t &arg4);
     void nav_script_time_done(uint16_t id);
 
-    // 
-    void init_reversed_flag() override {
-        if (!mission.is_resume()) {
+    //
+    void init_reversed_flag() override
+    {
+        if (!mission.is_resume())
+        {
             set_reversed(false);
         }
     }
 
     AP_Mission mission{
-        FUNCTOR_BIND_MEMBER(&ModeAuto::start_command, bool, const AP_Mission::Mission_Command&),
-        FUNCTOR_BIND_MEMBER(&ModeAuto::verify_command_callback, bool, const AP_Mission::Mission_Command&),
+        FUNCTOR_BIND_MEMBER(&ModeAuto::start_command, bool, const AP_Mission::Mission_Command &),
+        FUNCTOR_BIND_MEMBER(&ModeAuto::verify_command_callback, bool, const AP_Mission::Mission_Command &),
         FUNCTOR_BIND_MEMBER(&ModeAuto::exit_mission, void)};
 
-    enum class DoneBehaviour : uint8_t {
-        HOLD      = 0,
-        LOITER    = 1,
-        ACRO      = 2,
-        MANUAL    = 3,
+    enum class DoneBehaviour : uint8_t
+    {
+        HOLD = 0,
+        LOITER = 1,
+        ACRO = 2,
+        MANUAL = 3,
     };
 
 protected:
-
     bool _enter() override;
     void _exit() override;
 
-    enum SubMode: uint8_t {
-        WP,                // drive to a given location
-        HeadingAndSpeed,   // turn to a given heading
-        RTL,               // perform RTL within auto mode
-        Loiter,            // perform Loiter within auto mode
-        Guided,            // handover control to external navigation system from within auto mode
-        Stop,              // stop the vehicle as quickly as possible
-        NavScriptTime,     // accept targets from lua scripts while NAV_SCRIPT_TIME commands are executing
-        Circle,            // circle a given location
+    enum SubMode : uint8_t
+    {
+        WP,              // drive to a given location
+        HeadingAndSpeed, // turn to a given heading
+        RTL,             // perform RTL within auto mode
+        Loiter,          // perform Loiter within auto mode
+        Guided,          // handover control to external navigation system from within auto mode
+        Stop,            // stop the vehicle as quickly as possible
+        NavScriptTime,   // accept targets from lua scripts while NAV_SCRIPT_TIME commands are executing
+        Circle,          // circle a given location
     } _submode;
 
 private:
-
     bool check_trigger(void);
     bool start_loiter();
-    void start_guided(const Location& target_loc);
+    void start_guided(const Location &target_loc);
     void start_stop();
     void send_guided_position_target();
 
-    bool start_command(const AP_Mission::Mission_Command& cmd);
+    bool start_command(const AP_Mission::Mission_Command &cmd);
     void exit_mission();
-    bool verify_command_callback(const AP_Mission::Mission_Command& cmd);
+    bool verify_command_callback(const AP_Mission::Mission_Command &cmd);
 
-    bool verify_command(const AP_Mission::Mission_Command& cmd);
+    bool verify_command(const AP_Mission::Mission_Command &cmd);
     void do_RTL(void);
-    bool do_nav_wp(const AP_Mission::Mission_Command& cmd, bool always_stop_at_destination);
-    void do_nav_guided_enable(const AP_Mission::Mission_Command& cmd);
-    void do_nav_set_yaw_speed(const AP_Mission::Mission_Command& cmd);
-    void do_nav_delay(const AP_Mission::Mission_Command& cmd);
-    bool verify_nav_delay(const AP_Mission::Mission_Command& cmd);
-    bool verify_nav_wp(const AP_Mission::Mission_Command& cmd);
+    bool do_nav_wp(const AP_Mission::Mission_Command &cmd, bool always_stop_at_destination);
+    void do_nav_guided_enable(const AP_Mission::Mission_Command &cmd);
+    void do_nav_set_yaw_speed(const AP_Mission::Mission_Command &cmd);
+    void do_nav_delay(const AP_Mission::Mission_Command &cmd);
+    bool verify_nav_delay(const AP_Mission::Mission_Command &cmd);
+    bool verify_nav_wp(const AP_Mission::Mission_Command &cmd);
     bool verify_RTL() const;
-    bool verify_loiter_unlimited(const AP_Mission::Mission_Command& cmd);
-    bool verify_loiter_time(const AP_Mission::Mission_Command& cmd);
-    bool verify_nav_guided_enable(const AP_Mission::Mission_Command& cmd);
+    bool verify_loiter_unlimited(const AP_Mission::Mission_Command &cmd);
+    bool verify_loiter_time(const AP_Mission::Mission_Command &cmd);
+    bool verify_nav_guided_enable(const AP_Mission::Mission_Command &cmd);
     bool verify_nav_set_yaw_speed();
-    bool do_circle(const AP_Mission::Mission_Command& cmd);
-    bool verify_circle(const AP_Mission::Mission_Command& cmd);
-    void do_wait_delay(const AP_Mission::Mission_Command& cmd);
-    void do_within_distance(const AP_Mission::Mission_Command& cmd);
+    bool do_circle(const AP_Mission::Mission_Command &cmd);
+    bool verify_circle(const AP_Mission::Mission_Command &cmd);
+    void do_wait_delay(const AP_Mission::Mission_Command &cmd);
+    void do_within_distance(const AP_Mission::Mission_Command &cmd);
     bool verify_wait_delay();
     bool verify_within_distance();
-    void do_change_speed(const AP_Mission::Mission_Command& cmd);
-    void do_set_home(const AP_Mission::Mission_Command& cmd);
-    void do_set_reverse(const AP_Mission::Mission_Command& cmd);
-    void do_guided_limits(const AP_Mission::Mission_Command& cmd);
+    void do_change_speed(const AP_Mission::Mission_Command &cmd);
+    void do_set_home(const AP_Mission::Mission_Command &cmd);
+    void do_set_reverse(const AP_Mission::Mission_Command &cmd);
+    void do_guided_limits(const AP_Mission::Mission_Command &cmd);
 #if AP_SCRIPTING_ENABLED
-    void do_nav_script_time(const AP_Mission::Mission_Command& cmd);
+    void do_nav_script_time(const AP_Mission::Mission_Command &cmd);
     bool verify_nav_script_time();
 #endif
 
-    bool waiting_to_start;  // true if waiting for EKF origin before starting mission
-    bool auto_triggered;        // true when auto has been triggered to start
+    bool waiting_to_start; // true if waiting for EKF origin before starting mission
+    bool auto_triggered;   // true when auto has been triggered to start
 
     // HeadingAndSpeed sub mode variables
-    float _desired_speed;   // desired speed in HeadingAndSpeed submode
-    bool _reached_heading;  // true when vehicle has reached desired heading in TurnToHeading sub mode
+    float _desired_speed;  // desired speed in HeadingAndSpeed submode
+    bool _reached_heading; // true when vehicle has reached desired heading in TurnToHeading sub mode
 
     // Loiter control
-    uint16_t loiter_duration;       // How long we should loiter at the nav_waypoint (time in seconds)
-    uint32_t loiter_start_time;     // How long have we been loitering - The start time in millis
-    bool previously_reached_wp;     // set to true if we have EVER reached the waypoint
+    uint16_t loiter_duration;   // How long we should loiter at the nav_waypoint (time in seconds)
+    uint32_t loiter_start_time; // How long have we been loitering - The start time in millis
+    bool previously_reached_wp; // set to true if we have EVER reached the waypoint
 
     // Guided-within-Auto variables
-    struct {
-        Location loc;           // location target sent to external navigation
-        bool valid;             // true if loc is valid
-        uint32_t last_sent_ms;  // system time that target was last sent to offboard navigation
+    struct
+    {
+        Location loc;          // location target sent to external navigation
+        bool valid;            // true if loc is valid
+        uint32_t last_sent_ms; // system time that target was last sent to offboard navigation
     } guided_target;
 
     // Conditional command
@@ -384,21 +388,22 @@ private:
     int32_t condition_start;
 
     // Delay the next navigation command
-    uint32_t nav_delay_time_max_ms;  // used for delaying the navigation commands
+    uint32_t nav_delay_time_max_ms; // used for delaying the navigation commands
     uint32_t nav_delay_time_start_ms;
 
 #if AP_SCRIPTING_ENABLED
     // nav_script_time command variables
-    struct {
-        bool done;          // true once lua script indicates it has completed
-        uint16_t id;        // unique id to avoid race conditions between commands and lua scripts
-        uint32_t start_ms;  // system time nav_script_time command was received (used for timeout)
-        uint8_t command;    // command number provided by mission command
-        uint8_t timeout_s;  // timeout (in seconds) provided by mission command
-        float arg1;         // 1st argument provided by mission command
-        float arg2;         // 2nd argument provided by mission command
-        int16_t arg3;       // 3rd argument provided by mission command
-        int16_t arg4;       // 4th argument provided by mission command
+    struct
+    {
+        bool done;         // true once lua script indicates it has completed
+        uint16_t id;       // unique id to avoid race conditions between commands and lua scripts
+        uint32_t start_ms; // system time nav_script_time command was received (used for timeout)
+        uint8_t command;   // command number provided by mission command
+        uint8_t timeout_s; // timeout (in seconds) provided by mission command
+        float arg1;        // 1st argument provided by mission command
+        float arg2;        // 2nd argument provided by mission command
+        int16_t arg3;      // 3rd argument provided by mission command
+        int16_t arg4;      // 4th argument provided by mission command
     } nav_scripting;
 #endif
 
@@ -409,7 +414,6 @@ private:
 class ModeCircle : public Mode
 {
 public:
-
     // need a constructor for parameters
     ModeCircle();
 
@@ -424,7 +428,7 @@ public:
 
     // initialise with specific center location, radius (in meters) and direction
     // replaces use of _enter when initialised from within Auto mode
-    bool set_center(const Location& center_loc, float radius_m, bool dir_ccw);
+    bool set_center(const Location &center_loc, float radius_m, bool dir_ccw);
 
     // methods that affect movement of the vehicle in this mode
     void update() override;
@@ -444,7 +448,7 @@ public:
     float get_distance_to_destination() const override { return _distance_to_destination; }
 
     // get or set desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
 
     // return total angle in radians that vehicle has circled
     // fabsf is used so that full rotations in either direction are counted
@@ -453,10 +457,9 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
 protected:
-
-    AP_Float radius;        // circle radius in meters
-    AP_Float speed;         // vehicle speed in m/s.  If zero uses WP_SPEED
-    AP_Int8 direction;      // direction 0:clockwise, 1:counter-clockwise
+    AP_Float radius;   // circle radius in meters
+    AP_Float speed;    // vehicle speed in m/s.  If zero uses WP_SPEED
+    AP_Int8 direction; // direction 0:clockwise, 1:counter-clockwise
 
     // initialise mode
     bool _enter() override;
@@ -480,30 +483,33 @@ protected:
     void check_config_radius();
 
     // enum for Direction parameter
-    enum class Direction {
+    enum class Direction
+    {
         CW = 0,
         CCW = 1
     };
 
     // local members
-    struct {
-        Location center_loc;    // circle center as a Location
-        Vector2f center_pos;    // circle center as an offset (in meters) from the EKF origin
-        float radius;   // circle radius
-        float speed;    // desired speed around circle in m/s
-        Direction dir;  // direction, 0:clockwise, 1:counter-clockwise
+    struct
+    {
+        Location center_loc; // circle center as a Location
+        Vector2f center_pos; // circle center as an offset (in meters) from the EKF origin
+        float radius;        // circle radius
+        float speed;         // desired speed around circle in m/s
+        Direction dir;       // direction, 0:clockwise, 1:counter-clockwise
     } config;
-    struct {
+    struct
+    {
         float speed;    // vehicle's target speed around circle in m/s
         float yaw_rad;  // earth-frame angle of tarrget point on the circle
         Vector2p pos;   // latest position target sent to position controller
         Vector2f vel;   // latest velocity target sent to position controller
         Vector2f accel; // latest accel target sent to position controller
     } target;
-    float angle_total_rad;  // total angle in radians that vehicle has circled
-    bool reached_edge;      // true once vehicle has reached edge of circle
-    float dist_to_edge_m;   // distance to edge of circle in meters (equivalent to crosstrack error)
-    bool tracking_back;     // true if the vehicle is trying to track back onto the circle
+    float angle_total_rad; // total angle in radians that vehicle has circled
+    bool reached_edge;     // true once vehicle has reached edge of circle
+    float dist_to_edge_m;  // distance to edge of circle in meters (equivalent to crosstrack error)
+    bool tracking_back;    // true if the vehicle is trying to track back onto the circle
 };
 
 class ModeGuided : public Mode
@@ -541,7 +547,7 @@ public:
     bool set_desired_speed(float speed) override;
 
     // get or set desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
     bool set_desired_location(const Location &destination, Location next_destination = Location()) override WARN_IF_UNUSED;
 
     // set desired heading and speed
@@ -567,8 +573,8 @@ public:
     bool limit_breached() const;
 
 protected:
-
-    enum class SubMode: uint8_t {
+    enum class SubMode : uint8_t
+    {
         WP,
         HeadingAndSpeed,
         TurnRateAndSpeed,
@@ -578,7 +584,8 @@ protected:
     };
 
     // enum for GUID_OPTIONS parameter
-    enum class Options : int32_t {
+    enum class Options : int32_t
+    {
         SCurvesUsedForNavigation = (1U << 6)
     };
 
@@ -588,35 +595,34 @@ protected:
     // scurves provide path planning and object avoidance but cannot handle fast updates to the destination (for fast updates use position controller input shaping)
     bool use_scurves_for_navigation() const;
 
-    SubMode _guided_mode;    // stores which GUIDED mode the vehicle is in
+    SubMode _guided_mode; // stores which GUIDED mode the vehicle is in
 
     // attitude control
-    bool have_attitude_target;  // true if we have a valid attitude target
-    uint32_t _des_att_time_ms;  // system time last call to set_desired_attitude was made (used for timeout)
-    float _desired_yaw_rate_cds;// target turn rate centi-degrees per second
-    bool send_notification;     // used to send one time notification to ground station
-    float _desired_speed;       // desired speed used only in HeadingAndSpeed submode
+    bool have_attitude_target;   // true if we have a valid attitude target
+    uint32_t _des_att_time_ms;   // system time last call to set_desired_attitude was made (used for timeout)
+    float _desired_yaw_rate_cds; // target turn rate centi-degrees per second
+    bool send_notification;      // used to send one time notification to ground station
+    float _desired_speed;        // desired speed used only in HeadingAndSpeed submode
 
     // direct steering and throttle control
-    bool _have_strthr;          // true if we have a valid direct steering and throttle inputs
-    uint32_t _strthr_time_ms;   // system time last call to set_steering_and_throttle was made (used for timeout)
-    float _strthr_steering;     // direct steering input in the range -1 to +1
-    float _strthr_throttle;     // direct throttle input in the range -1 to +1
+    bool _have_strthr;        // true if we have a valid direct steering and throttle inputs
+    uint32_t _strthr_time_ms; // system time last call to set_steering_and_throttle was made (used for timeout)
+    float _strthr_steering;   // direct steering input in the range -1 to +1
+    float _strthr_throttle;   // direct throttle input in the range -1 to +1
 
     // limits
-    struct {
-        uint32_t timeout_ms;// timeout from the time that guided is invoked
-        float horiz_max;    // horizontal position limit in meters from where guided mode was initiated (0 = no limit)
+    struct
+    {
+        uint32_t timeout_ms;    // timeout from the time that guided is invoked
+        float horiz_max;        // horizontal position limit in meters from where guided mode was initiated (0 = no limit)
         uint32_t start_time_ms; // system time in milliseconds that control was handed to the external computer
-        Location start_loc; // starting location for checking horiz_max limit
+        Location start_loc;     // starting location for checking horiz_max limit
     } limit;
 };
-
 
 class ModeHold : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::HOLD; }
     const char *name4() const override { return "HOLD"; }
 
@@ -634,7 +640,6 @@ public:
 class ModeLoiter : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::LOITER; }
     const char *name4() const override { return "LOIT"; }
 
@@ -650,23 +655,21 @@ public:
     float crosstrack_error() const override { return 0.0f; }
 
     // return desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
 
     // return distance (in meters) to destination
     float get_distance_to_destination() const override { return _distance_to_destination; }
 
 protected:
-
     bool _enter() override;
 
-    Location _destination;      // target location to hold position around
-    float _desired_speed;       // desired speed (ramped down from initial speed to zero)
+    Location _destination; // target location to hold position around
+    float _desired_speed;  // desired speed (ramped down from initial speed to zero)
 };
 
 class ModeManual : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::MANUAL; }
     const char *name4() const override { return "MANU"; }
 
@@ -682,15 +685,12 @@ public:
     bool requires_velocity() const override { return false; }
 
 protected:
-
     void _exit() override;
 };
-
 
 class ModeRTL : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::RTL; }
     const char *name4() const override { return "RTL"; }
 
@@ -704,7 +704,7 @@ public:
     bool allows_arming() const override { return false; }
 
     // return desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
 
     // return distance (in meters) to destination
     float get_distance_to_destination() const override { return _distance_to_destination; }
@@ -714,18 +714,15 @@ public:
     bool set_desired_speed(float speed) override;
 
 protected:
-
     bool _enter() override;
 
     bool send_notification; // used to send one time notification to ground station
     bool _loitering;        // true if loitering at end of RTL
-
 };
 
 class ModeSmartRTL : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::SMART_RTL; }
     const char *name4() const override { return "SRTL"; }
 
@@ -739,7 +736,7 @@ public:
     bool allows_arming() const override { return false; }
 
     // return desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED;
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED;
 
     // return distance (in meters) to destination
     float get_distance_to_destination() const override { return _distance_to_destination; }
@@ -752,9 +749,9 @@ public:
     void save_position();
 
 protected:
-
     // Safe RTL states
-    enum class SmartRTLState: uint8_t {
+    enum class SmartRTLState : uint8_t
+    {
         WaitForPathCleanup,
         PathFollow,
         StopAtHome,
@@ -763,15 +760,12 @@ protected:
 
     bool _enter() override;
     bool _load_point;
-    bool _loitering;        // true if loitering at end of SRTL
+    bool _loitering; // true if loitering at end of SRTL
 };
-
-
 
 class ModeSteering : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::STEERING; }
     const char *name4() const override { return "STER"; }
 
@@ -789,19 +783,17 @@ public:
     float get_desired_lat_accel() const override { return _desired_lat_accel; }
 
 private:
-
-    float _desired_lat_accel;   // desired lateral acceleration calculated from pilot steering input
+    float _desired_lat_accel; // desired lateral acceleration calculated from pilot steering input
 };
 
 class ModeInitializing : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::INITIALISING; }
     const char *name4() const override { return "INIT"; }
 
     // methods that affect movement of the vehicle in this mode
-    void update() override { }
+    void update() override {}
 
     // do not allow arming from this mode
     bool allows_arming() const override { return false; }
@@ -809,6 +801,7 @@ public:
     // attributes for mavlink system status reporting
     bool has_manual_input() const override { return true; }
     bool attitude_stabilized() const override { return false; }
+
 protected:
     bool _enter() override { return false; };
 };
@@ -817,7 +810,6 @@ protected:
 class ModeFollow : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::FOLLOW; }
     const char *name4() const override { return "FOLL"; }
 
@@ -833,7 +825,7 @@ public:
     float crosstrack_error() const override { return 0.0f; }
 
     // return desired location
-    bool get_desired_location(Location& destination) const override WARN_IF_UNUSED { return false; }
+    bool get_desired_location(Location &destination) const override WARN_IF_UNUSED { return false; }
 
     // return distance (in meters) to destination
     float get_distance_to_destination() const override;
@@ -842,18 +834,16 @@ public:
     bool set_desired_speed(float speed) override;
 
 protected:
-
     bool _enter() override;
     void _exit() override;
 
-    float _desired_speed;       // desired speed in m/s
+    float _desired_speed; // desired speed in m/s
 };
 #endif
 
 class ModeSimple : public Mode
 {
 public:
-
     Number mode_number() const override { return Number::SIMPLE; }
     const char *name4() const override { return "SMPL"; }
 
@@ -862,22 +852,21 @@ public:
     void init_heading();
 
     // simple type enum used for SIMPLE_TYPE parameter
-    enum simple_type {
+    enum simple_type
+    {
         Simple_InitialHeading = 0,
         Simple_CardinalDirections = 1,
     };
 
 private:
-
-    float _initial_heading_cd;  // vehicle heading (in centi-degrees) at moment vehicle was armed
-    float _desired_heading_cd;  // latest desired heading (in centi-degrees) from pilot
+    float _initial_heading_cd; // vehicle heading (in centi-degrees) at moment vehicle was armed
+    float _desired_heading_cd; // latest desired heading (in centi-degrees) from pilot
 };
 
 #if MODE_DOCK_ENABLED
 class ModeDock : public Mode
 {
 public:
-
     // need a constructor for parameters
     ModeDock(void);
 
@@ -898,12 +887,11 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
 protected:
-
-    AP_Float speed; // dock mode speed
-    AP_Float desired_dir; // desired direction of approach
-    AP_Int8 hdg_corr_enable; // enable heading correction
+    AP_Float speed;           // dock mode speed
+    AP_Float desired_dir;     // desired direction of approach
+    AP_Int8 hdg_corr_enable;  // enable heading correction
     AP_Float hdg_corr_weight; // heading correction weight
-    AP_Float stopping_dist; // how far away from the docking target should we start stopping
+    AP_Float stopping_dist;   // how far away from the docking target should we start stopping
 
     bool _enter() override;
 
@@ -918,9 +906,30 @@ protected:
     // acceptable lateral error in vehicle's position with respect to dock. This is used while slowing down the vehicle
     const float _acceptable_pos_error_cm = 20.0f;
 
-    Vector2f _dock_pos_rel_origin_cm;   // position vector towards docking target relative to ekf origin
-    Vector2f _desired_heading_NE;       // unit vector in desired direction of docking
-    bool _docking_complete = false;     // flag to mark docking complete when we are close enough to the dock
-    bool _loitering = false; // true if we are loitering after mission completion
+    Vector2f _dock_pos_rel_origin_cm; // position vector towards docking target relative to ekf origin
+    Vector2f _desired_heading_NE;     // unit vector in desired direction of docking
+    bool _docking_complete = false;   // flag to mark docking complete when we are close enough to the dock
+    bool _loitering = false;          // true if we are loitering after mission completion
 };
 #endif
+
+class ModeNodeRed : public Mode
+{
+public:
+    Number mode_number() const override { return Number::NODE_RED; }
+    const char *name4() const override { return "NODE"; }
+
+    // methods that affect movement of the vehicle in this mode
+    void update() override;
+
+    // attributes for mavlink system status reporting
+    bool has_manual_input() const override { return false; }
+    bool attitude_stabilized() const override { return false; }
+
+    // manual mode does not require position or velocity estimate
+    bool requires_position() const override { return false; } // TODO
+    bool requires_velocity() const override { return false; }
+
+protected:
+    void _exit() override;
+};
